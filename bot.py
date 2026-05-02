@@ -1,0 +1,64 @@
+import discord
+from discord.ext import tasks
+import os
+from dotenv import load_dotenv
+from datetime import date, datetime
+from agenda import agenda_van_morgen
+
+load_dotenv()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+USER_ID = int(os.getenv("1256983085208305738"))
+
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+
+dm_teller = 0
+laatste_dag = date.today()
+MAX_DMS_PER_DAG = 20
+LOG_BESTAND = "dm_log.txt"
+
+def schrijf_log(bericht, teller):
+    tijdstip = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_BESTAND, "a", encoding="utf-8") as f:
+        f.write(f"[{tijdstip}] DM verzonden ({teller}/{MAX_DMS_PER_DAG})\n")
+        f.write(bericht + "\n")
+        f.write("-" * 40 + "\n")
+
+@client.event
+async def on_ready():
+    print(f"✅ Bot online als {client.user}")
+    check_morgen.start()
+
+@tasks.loop(minutes=30)
+async def check_morgen():
+    global dm_teller, laatste_dag
+
+    vandaag = date.today()
+
+    # 🔄 Reset bij nieuwe dag
+    if vandaag != laatste_dag:
+        dm_teller = 0
+        laatste_dag = vandaag
+
+    if dm_teller >= MAX_DMS_PER_DAG:
+        return
+
+    items = agenda_van_morgen()
+    if not items:
+        return
+
+    user = await client.fetch_user(USER_ID)
+
+    bericht = "📅 **Je agenda voor morgen:**\n\n"
+    for item in items:
+        bericht += f"• {item}\n"
+
+    await user.send(bericht)
+
+    dm_teller += 1
+    schrijf_log(bericht, dm_teller)
+
+    print(f"📨 DM verzonden ({dm_teller}/{MAX_DMS_PER_DAG})")
+
+client.run(TOKEN)

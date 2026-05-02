@@ -37,6 +37,8 @@ async def on_ready():
 @tasks.loop(minutes=30)
 async def check_morgen():
     global dm_teller, laatste_dag
+    print("📅 Items voor morgen:", items)
+``
 
     vandaag = date.today()
 

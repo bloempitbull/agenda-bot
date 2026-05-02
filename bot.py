@@ -28,6 +28,10 @@ def schrijf_log(bericht, teller):
 @client.event
 async def on_ready():
     print(f"✅ Bot online als {client.user}")
+
+    user = await client.fetch_user(USER_ID)
+    await user.send("✅ Test: ik kan je DM’en!")
+
     check_morgen.start()
 
 @tasks.loop(minutes=30)

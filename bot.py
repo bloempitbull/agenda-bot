@@ -67,8 +67,6 @@ async def check_morgen():
     schrijf_log(bericht, dm_teller)
 
     print(f"📨 DM verzonden ({dm_teller}/{MAX_DMS_PER_DAG})")
-
-client.run(TOKEN)
 @client.event
 async def on_message(message):
     # Negeer andere bots
@@ -91,3 +89,4 @@ async def on_message(message):
             antwoord += f"• {item}\n"
 
         await message.channel.send(antwoord)
+client.run(TOKEN)

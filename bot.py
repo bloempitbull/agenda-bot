@@ -8,7 +8,7 @@ from agenda import agenda_van_morgen
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-USER_ID = int(os.getenv("1256983085208305738"))
+USER_ID = int(os.getenv("DISCORD_USER_ID"))
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)

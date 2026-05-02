@@ -1,39 +1,45 @@
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv
+import time
 
-load_dotenv()
-
-LOGIN_URL = "https://kolvw.caspr.be/login"
-AGENDA_URL = "https://kolvw.caspr.be/leerlingapp/Agenda"
-
-USERNAME = os.getenv("CASPR_USERNAME")
-PASSWORD = os.getenv("CASPR_PASSWORD")
+CASPR_URL = "https://kolvw.caspr.be/leerlingapp/Agenda"
 
 def agenda_van_morgen():
-    morgen = (datetime.now() + timedelta(days=1)).strftime("%d-%m-%Y")
+    morgen = (datetime.now() + timedelta(days=1)).strftime("%-d-%-m")
 
-    session = requests.Session()
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-    # 🔐 Login (kan aangepast moeten worden)
-    login_data = {
-        "username": USERNAME,
-        "password": PASSWORD
-    }
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=options
+    )
 
-    session.post(LOGIN_URL, data=login_data)
-    response = session.get(AGENDA_URL)
+    driver.get(CASPR_URL)
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    # ⏳ Wacht tot agenda‑blokken zichtbaar zijn
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "fc-event"))
+    )
+
+    time.sleep(2)  # extra buffer
+
     items_morgen = []
 
-    # ⚠️ PAS DIT AAN NA INSPECTEREN
-    for item in soup.select(".agenda-item"):
-        tekst = item.get_text(" ", strip=True)
-
-        if morgen in tekst:
+    events = driver.find_elements(By.CLASS_NAME, "fc-event")
+    for event in events:
+        tekst = event.text.strip()
+        if tekst:
             items_morgen.append(tekst)
 
+    driver.quit()
     return items_morgen

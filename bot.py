@@ -69,3 +69,25 @@ async def check_morgen():
     print(f"📨 DM verzonden ({dm_teller}/{MAX_DMS_PER_DAG})")
 
 client.run(TOKEN)
+@client.event
+async def on_message(message):
+    # Negeer andere bots
+    if message.author.bot:
+        return
+
+    if message.content.lower() == "/checknu":
+        await message.channel.send("🔍 Ik check nu je agenda voor morgen...")
+
+        items = agenda_van_morgen()
+
+        if not items:
+            await message.channel.send(
+                "✅ Ik zie **geen items** in je agenda voor morgen."
+            )
+            return
+
+        antwoord = "📅 **Agenda voor morgen (live check):**\n\n"
+        for item in items:
+            antwoord += f"• {item}\n"
+
+        await message.channel.send(antwoord)

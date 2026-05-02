@@ -11,6 +11,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 USER_ID = int(os.getenv("DISCORD_USER_ID"))
 
 intents = discord.Intents.default()
+intents.message_content = True
 client = discord.Client(intents=intents)
 
 dm_teller = 0
